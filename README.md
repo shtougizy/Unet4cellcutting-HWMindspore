@@ -1,4 +1,4 @@
-# Unet4cellcutting-HWMindspore
+# Unet4cellcutting-HWMindspore 技术文档
 CREATE IN 2024.7:Optimize unet model for cell cutting,including:Adding Dice Loss;Using Convolution + Upsampling instead of Transposed Convolution;Adding Residual Connections in Convolution;Adding Data Augmentation.
 
 UNet最初由Ronneberger等人在2015年提出，特别适用于生物医学图像的分割任务，其主要特点是结合了卷积神经网络（CNN）的强大特征提取能力和对称性结构设计，能够在准确分割图像的同时保持较高的计算效率。
