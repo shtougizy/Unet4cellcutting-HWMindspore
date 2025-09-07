@@ -21,7 +21,9 @@ UNet在MindSpore中的实现
 UNet在图像分割任务中表现出色，广泛应用于医学图像分析（如肿瘤分割、器官分割）、遥感影像处理（如土地覆盖分类）、自然图像处理等领域。其通过对图像的像素级别进行分类，实现对目标区域的精准分割。
 总结来说，UNet是一个结构简单但功能强大的图像分割模型，结合了编码器和解码器的优势，通过跳跃连接有效融合低层次和高层次特征信息。在MindSpore中，UNet的实现和应用能够高效完成各种图像分割任务，满足不同领域的需求。
 原始测试结果：
- 
+
+<img width="567" height="42" alt="image" src="https://github.com/user-attachments/assets/03c3d4d9-8a45-4297-924e-6ee1adb65966" />
+
 
 1.为Unet训练加入Dice损失
 代码：
@@ -104,7 +106,7 @@ scheduler: 学习率调度器的实例。
 	max_lr=float(lr): 最大学习率设置为 lr，其中 lr 是一个预先定义好的学习率值。
 	decay_steps=epochs: 学习率衰减的步数，通常设置为训练的总 epoch 数。
 
-
+<img width="568" height="52" alt="image" src="https://github.com/user-attachments/assets/b86ad1b8-f0f4-4e9e-a0f1-244e4daa226f" />
 
 前三步同时实现后的实验结果，损失率明显降低。
  
@@ -175,6 +177,9 @@ scheduler: 学习率调度器的实例。
 
 实验结果： 
 
+<img width="568" height="60" alt="image" src="https://github.com/user-attachments/assets/36366862-9ba1-4a69-9ca6-38d350c2b256" />
+
+
 5.为Unet中的卷积加入残差链接
 
 	class UnetConv2d(nn.Cell):
@@ -236,8 +241,10 @@ scheduler: 学习率调度器的实例。
 这样，通过残差链接，卷积层的输出不仅包含了卷积操作后的信息，还保留了一部分输入信息，这种结构在深层网络中可以有效缓解梯度消失问题，提升模型性能。
 
 测试结果：
+<img width="568" height="52" alt="image" src="https://github.com/user-attachments/assets/2cb02e2f-2696-4103-b557-01d09e71cb8b" />
+
  
-4.加入随机仿射变换、随机亮度等数据增广
+6.加入随机仿射变换、随机亮度等数据增广
 	代码：
  
 	def train_data_augmentation(img, mask):
@@ -383,3 +390,6 @@ np.flipud和np.fliplr分别用于上下翻转和左右翻转。通过随机概�
    在医学图像处理等领域，标注数据往往有限。数据增强可以有效地扩展有限的数据集，使得模型在有限数据上也能获得较好的性能。
 
 总的来说，数据增强通过模拟多种图像变换，显著提高了UNet模型的泛化能力、鲁棒性和对有限数据的利用效率，从而在实际应用中获得更好的表现。
+
+<img width="568" height="63" alt="image" src="https://github.com/user-attachments/assets/c2b8a707-dd2e-43f8-8dd5-e7fada9bd165" />
+
