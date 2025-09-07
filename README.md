@@ -1,8 +1,10 @@
 # Unet4cellcutting-HWMindspore 技术文档
 CREATEED IN 2025.9
+
 EXPERIMENTed IN 2024.7:Optimize unet model for cell cutting,including:Adding Dice Loss;Using Convolution + Upsampling instead of Transposed Convolution;Adding Residual Connections in Convolution;Adding Data Augmentation.
 
 UNet最初由Ronneberger等人在2015年提出，特别适用于生物医学图像的分割任务，其主要特点是结合了卷积神经网络（CNN）的强大特征提取能力和对称性结构设计，能够在准确分割图像的同时保持较高的计算效率。
+
 UNet的结构
 UNet的结构可以分为两部分：编码器和解码器。
 1. 编码器（Encoder）：编码器部分由一系列卷积层和池化层组成，逐层提取图像的空间特征。每一层卷积操作后紧接着一个ReLU激活函数和一个最大池化操作。这部分的作用是逐渐减少特征图的空间维度，同时增加特征图的深度，从而捕捉图像的上下文信息。
@@ -14,6 +16,7 @@ UNet在MindSpore中的实现
 2. 跳跃连接：在编码器和解码器之间建立跳跃连接，将编码器各层的输出特征图与解码器对应层的特征图拼接，以帮助恢复更多细节信息。
 3. 损失函数和优化器：选择适当的损失函数（如交叉熵损失）和优化器（如Adam），用于训练UNet模型。
 4. 训练和推理：通过MindSpore的训练框架，加载数据集，进行模型训练和评估。训练完成后，使用训练好的模型进行图像分割任务的推理。
+5. 
 应用场景
 UNet在图像分割任务中表现出色，广泛应用于医学图像分析（如肿瘤分割、器官分割）、遥感影像处理（如土地覆盖分类）、自然图像处理等领域。其通过对图像的像素级别进行分类，实现对目标区域的精准分割。
 总结来说，UNet是一个结构简单但功能强大的图像分割模型，结合了编码器和解码器的优势，通过跳跃连接有效融合低层次和高层次特征信息。在MindSpore中，UNet的实现和应用能够高效完成各种图像分割任务，满足不同领域的需求。
@@ -54,6 +57,7 @@ super(DiceLoss, self).__init__()：调用父类nn.Cell的初始化方法，确�
 	targets = ops.Reshape()(targets, (targets.shape[0], -1))
 
 construct方法：定义前向计算逻辑，即如何计算Dice损失。
+
 inputs = ops.Sigmoid()(inputs)：将预测的输入通过Sigmoid激活函数，压缩到[0, 1]范围内。这一步是因为在二值分割任务中，网络的输出通常是概率值。
 inputs = ops.Reshape()(inputs, (inputs.shape[0], -1))：将inputs重塑为二维张量，其中第一维是批次大小，第二维是展平后的像素数。这样可以方便后续计算。
 targets = ops.Reshape()(targets, (targets.shape[0], -1))：将目标标签targets同样重塑为二维张量，方便与inputs进行逐元素操作。
@@ -88,6 +92,7 @@ momentum=0.9: 这是设置动量参数为0.9，动量的引入可以加速收敛
 
 
 3. 引入CosineAnnealing学习率调度器
+   
 代码：
 
 scheduler=nn.CosineDecayLR(min_lr=float(0),max_lr=float(lr), decay_steps=epochs)
@@ -167,32 +172,34 @@ scheduler: 学习率调度器的实例。
 5.	构造方法 (construct):
 	执行了整个 UNet 的前向计算过程。
 	从输入开始，经过下采样和上采样操作，最终生成分割结果。
+
 实验结果： 
 
 5.为Unet中的卷积加入残差链接
-class UnetConv2d(nn.Cell):
-  
-    def __init__(self, in_channel, out_channel, use_bn=True, num_layer=2, kernel_size=3, stride=1, padding='same'):
-        super(UnetConv2d, self).__init__()
-        self.num_layer = num_layer
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.padding = padding
-        self.in_channel = in_channel
-        self.out_channel = out_channel
-        convs = []
-        for _ in range(num_layer):
-            convs.append(conv_bn_relu(in_channel, out_channel, use_bn, kernel_size, stride, padding, "relu"))
-            in_channel = out_channel
-        self.convs = nn.SequentialCell(convs)
-        # 添加残差卷积层以匹配通道数
-        self.residual_conv=nn.Conv2d(self.in_channel,self.out_channel,kernel_size=1, stride=1, pad_mode='same',weight_init="normal", bias_init="zeros")
 
-    def construct(self, inputs):
-        residual = self.residual_conv(inputs)  # 计算残差以匹配通道数
-        x = self.convs(inputs)
-        x += residual  # 将卷积层输出与残差相加
-        return x   
+	class UnetConv2d(nn.Cell):
+  
+	    def __init__(self, in_channel, out_channel, use_bn=True, num_layer=2, kernel_size=3, stride=1, padding='same'):
+	        super(UnetConv2d, self).__init__()
+	        self.num_layer = num_layer
+	        self.kernel_size = kernel_size
+	        self.stride = stride
+	        self.padding = padding
+	        self.in_channel = in_channel
+	        self.out_channel = out_channel
+	        convs = []
+	        for _ in range(num_layer):
+	            convs.append(conv_bn_relu(in_channel, out_channel, use_bn, kernel_size, stride, padding, "relu"))
+	            in_channel = out_channel
+	        self.convs = nn.SequentialCell(convs)
+	        # 添加残差卷积层以匹配通道数
+	        self.residual_conv=nn.Conv2d(self.in_channel,self.out_channel,kernel_size=1, stride=1, pad_mode='same',weight_init="normal", bias_init="zeros")
+	
+	    def construct(self, inputs):
+	        residual = self.residual_conv(inputs)  # 计算残差以匹配通道数
+	        x = self.convs(inputs)
+	        x += residual  # 将卷积层输出与残差相加
+	        return x   
 
 在我编辑的代码中，为了在Unet中的卷积层加入残差链接，主要进行了以下几步操作：
 
@@ -345,6 +352,7 @@ np.flipud和np.fliplr分别用于上下翻转和左右翻转。通过随机概�
 	M_rotation = cv2.getRotationMatrix2D(center, angle, scale)
 	img = cv2.warpAffine(img, M_rotation, (cols, rows))
 	mask = cv2.warpAffine(mask, M_rotation, (cols, rows))
+ 
 创建旋转和缩放矩阵，并用cv2.warpAffine对图像和掩码进行变换。
 
 剪切变换：
@@ -359,6 +367,7 @@ np.flipud和np.fliplr分别用于上下翻转和左右翻转。通过随机概�
 创建剪切矩阵，并用cv2.warpAffine进行变换。
 
 总结：
+
 这段代码对UNet训练的意义在于通过数据增强（Data Augmentation）提高模型的泛化能力和鲁棒性。具体来说，数据增强的作用和意义包括以下几个方面：
 
 1. 增加训练数据的多样性：
@@ -373,4 +382,4 @@ np.flipud和np.fliplr分别用于上下翻转和左右翻转。通过随机概�
 4. 更好地利用有限的数据：
    在医学图像处理等领域，标注数据往往有限。数据增强可以有效地扩展有限的数据集，使得模型在有限数据上也能获得较好的性能。
 
-总结来说，数据增强通过模拟多种图像变换，显著提高了UNet模型的泛化能力、鲁棒性和对有限数据的利用效率，从而在实际应用中获得更好的表现。
+总的来说，数据增强通过模拟多种图像变换，显著提高了UNet模型的泛化能力、鲁棒性和对有限数据的利用效率，从而在实际应用中获得更好的表现。
