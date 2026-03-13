@@ -68,8 +68,7 @@ scheduler = nn.CosineDecayLR(
 
 ---
 
-### 4. 用卷积 + 上采样替换解码器中的转置卷积（可选）
-
+### 4. 用卷积 + 上采样替换解码器中的转置卷积
 在 `UNet` 初始化中通过 `use_deconv=False` 控制上采样方式，`UnetUp` 模块内部使用双线性插值上采样 + 普通卷积替代转置卷积，可有效缓解转置卷积的棋盘格伪影问题：
 
 ```python
@@ -79,7 +78,7 @@ self.up_concat1 = UnetUp(filters[1], filters[0], use_deconv=False, num_classes=2
 
 ---
 
-### 5. 为卷积模块加入残差连接（可选）
+### 5. 为卷积模块加入残差连接
 
 在 `UnetConv2d` 中加入 1×1 残差卷积分支，使输入可直接绕过卷积块叠加到输出，缓解梯度消失并增强特征复用：
 
@@ -101,7 +100,7 @@ class UnetConv2d(nn.Cell):
 
 ---
 
-### 6. 数据增广（可选）
+### 6. 数据增广
 
 实现 `train_data_augmentation` 函数，对训练图像和对应掩码同步施加以下变换，提升模型泛化能力：
 
